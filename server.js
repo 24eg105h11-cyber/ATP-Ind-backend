@@ -43,8 +43,16 @@ app.use("/api", apiRouter);
 
 // DB Connection
 const mongoUrl = process.env.DB_URL;
+const startServer = () => {
+  const PORT = process.env.PORT || 4000;
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+};
+
 if (!mongoUrl) {
   console.error("Missing DB_URL in .env");
+  process.exit(1);
 } else {
   const needsDbName = mongoUrl.startsWith("mongodb+srv://") && (() => {
     try {
@@ -59,6 +67,7 @@ if (!mongoUrl) {
     console.error(
       "Invalid DB_URL: mongodb+srv URIs must include a database name. Example: mongodb+srv://user:pass@cluster0.b30nexh.mongodb.net/myDatabase?retryWrites=true&w=majority"
     );
+    process.exit(1);
   } else {
     mongoose.connect(mongoUrl, {
         serverSelectionTimeoutMS: 10000,
@@ -69,6 +78,7 @@ if (!mongoUrl) {
       })
       .then(() => {
         console.log("Default problems seeded");
+        startServer();
       })
       .catch(err => {
         console.error("DB connection error details:");
@@ -82,6 +92,7 @@ if (!mongoUrl) {
             "If your network blocks SRV/DNS queries, use a standard mongodb:// connection string from Atlas instead of mongodb+srv://."
           );
         }
+        process.exit(1);
       });
   }
 }
