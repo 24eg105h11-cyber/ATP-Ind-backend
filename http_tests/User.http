@@ -1,0 +1,27 @@
+
+
+### Signup
+POST http://localhost:4000/api/users/signup
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "email": "test@example.com",
+    "password": "password123"
+}
+
+### Login
+# @name login
+POST http://localhost:4000/api/users/login
+Content-Type: application/json
+
+{
+    "email": "test@example.com",
+    "password": "password123"
+}
+
+### Get Me (Requires Cookie)
+GET http://localhost:4000/api/users/me
+
+### Logout
+POST http://localhost:4000/api/users/logout

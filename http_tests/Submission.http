@@ -1,0 +1,22 @@
+
+@submissionId = REPLACE_WITH_ACTUAL_ID
+@problemId = REPLACE_WITH_ACTUAL_ID
+
+### Submit Code (Requires Auth Cookie)
+POST http://localhost:4000/api/submissions
+Content-Type: application/json
+
+{
+    "problemId": "{{problemId}}",
+    "code": "print('hello world')",
+    "language": "python"
+}
+
+### Get All Submissions (Requires Auth Cookie)
+GET http://localhost:4000/api/submissions
+
+### Get Submissions for Problem (Requires Auth Cookie)
+GET http://localhost:4000/api/submissions/problem/{{problemId}}
+
+### Get Single Submission (Requires Auth Cookie)
+GET http://localhost:4000/api/submissions/{{submissionId}}

@@ -1,0 +1,34 @@
+
+@problemId = REPLACE_WITH_ACTUAL_ID
+
+### Get All Problems
+GET http://localhost:4000/api/problems
+
+### Get All Problems with Difficulty Filter
+GET http://localhost:4000/api/problems?difficulty=easy
+
+### Get Single Problem
+GET http://localhost:4000/api/problems/{{problemId}}
+
+### Create Problem (Admin Only - Requires Auth Cookie)
+POST http://localhost:4000/api/problems
+Content-Type: application/json
+
+{
+    "title": "Two Sum",
+    "description": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
+    "difficulty": "easy",
+    "tags": ["array", "hash-table"]
+}
+
+### Update Problem (Admin Only - Requires Auth Cookie)
+PUT http://localhost:4000/api/problems/{{problemId}}
+Content-Type: application/json
+
+{
+    "title": "Two Sum Updated",
+    "difficulty": "medium"
+}
+
+### Delete Problem (Admin Only - Requires Auth Cookie)
+DELETE http://localhost:4000/api/problems/{{problemId}}

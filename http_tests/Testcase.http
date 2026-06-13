@@ -1,0 +1,32 @@
+
+@testcaseId = REPLACE_WITH_ACTUAL_ID
+@problemId = REPLACE_WITH_ACTUAL_ID
+
+### Create Testcase (Admin Only - Requires Auth Cookie)
+POST http://localhost:4000/api/testcases
+Content-Type: application/json
+
+{
+    "problemId": "{{problemId}}",
+    "input": "[2,7,11,15]\n9",
+    "expectedOutput": "[0,1]",
+    "isSample": true
+}
+
+### Get Testcases for Problem
+GET http://localhost:4000/api/testcases/problem/{{problemId}}
+
+### Get Single Testcase
+GET http://localhost:4000/api/testcases/{{testcaseId}}
+
+### Update Testcase (Admin Only - Requires Auth Cookie)
+PUT http://localhost:4000/api/testcases/{{testcaseId}}
+Content-Type: application/json
+
+{
+    "input": "[3,2,4]\n6",
+    "expectedOutput": "[1,2]"
+}
+
+### Delete Testcase (Admin Only - Requires Auth Cookie)
+DELETE http://localhost:4000/api/testcases/{{testcaseId}}
