@@ -65,45 +65,46 @@ if (!/^mongodb(?:\+srv)?:\/\//i.test(mongoUrl)) {
 }
 
 const needsDbName = mongoUrl.startsWith("mongodb+srv://") && (() => {
-    try {
-      const parsed = new URL(mongoUrl);
-      return parsed.pathname === "/" || parsed.pathname === "";
-    } catch {
-      return true;
-    }
-  })();
+  try {
+    const parsed = new URL(mongoUrl);
+    return parsed.pathname === "/" || parsed.pathname === "";
+  } catch {
+    return true;
+  }
+})();
 
-  if (needsDbName) {
-    console.error(
-      "Invalid DB_URL: mongodb+srv URIs must include a database name. Example: mongodb+srv://user:pass@cluster0.b30nexh.mongodb.net/myDatabase?retryWrites=true&w=majority"
-    );
+if (needsDbName) {
+  console.error(
+    "Invalid DB_URL: mongodb+srv URIs must include a database name. Example: mongodb+srv://user:pass@cluster0.b30nexh.mongodb.net/myDatabase?retryWrites=true&w=majority"
+  );
+  process.exit(1);
+}
+
+mongoose.connect(mongoUrl, {
+    serverSelectionTimeoutMS: 10000,
+  })
+  .then(() => {
+    console.log(`DB server connected`);
+    return seedDefaultProblems();
+  })
+  .then(() => {
+    console.log("Default problems seeded");
+    startServer();
+  })
+  .catch(err => {
+    console.error("DB connection error details:");
+    console.error("Error Name:", err.name);
+    console.error("Error Message:", err.message);
+    if (err.message.includes("querySrv")) {
+      console.error(
+        "SRV lookup failed. Check that your MongoDB Atlas cluster is reachable, your network/DNS allows SRV lookups, and your DB_URL is a valid mongodb+srv URI with a database name."
+      );
+      console.error(
+        "If your network blocks SRV/DNS queries, use a standard mongodb:// connection string from Atlas instead of mongodb+srv://."
+      );
+    }
     process.exit(1);
-  } else {
-    mongoose.connect(mongoUrl, {
-        serverSelectionTimeoutMS: 10000,
-      })
-      .then(() => {
-        console.log(`DB server connected`);
-        return seedDefaultProblems();
-      })
-      .then(() => {
-        console.log("Default problems seeded");
-        startServer();
-      })
-      .catch(err => {
-        console.error("DB connection error details:");
-        console.error("Error Name:", err.name);
-        console.error("Error Message:", err.message);
-        if (err.message.includes("querySrv")) {
-          console.error(
-            "SRV lookup failed. Check that your MongoDB Atlas cluster is reachable, your network/DNS allows SRV lookups, and your DB_URL is a valid mongodb+srv URI with a database name."
-          );
-          console.error(
-            "If your network blocks SRV/DNS queries, use a standard mongodb:// connection string from Atlas instead of mongodb+srv://."
-          );
-        }
-        process.exit(1);
-      });
+  });
 
 // Basic Routes
 app.get("/", (req, res) => {
