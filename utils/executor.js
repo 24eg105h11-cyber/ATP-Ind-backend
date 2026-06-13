@@ -7,27 +7,64 @@ import os from "os";
 
 const execPromise = promisify(exec);
 
-const isCommandAvailable = async (cmd) => {
+const checkCommandVersion = async (command) => {
   try {
-    // Try common --version check; works for gcc/g++/clang
-    await execPromise(`${cmd} --version`);
+    await execPromise(`"${command}" --version`);
     return true;
-  } catch (e) {
-    try {
-      // On Windows `where` can help determine presence
+  } catch {
+    return false;
+  }
+};
+
+const isCommandAvailable = async (cmd) => {
+  if (await checkCommandVersion(cmd)) return true;
+
+  try {
+    if (process.platform === 'win32') {
       await execPromise(`where ${cmd}`);
-      return true;
-    } catch (e2) {
-      return false;
+    } else {
+      await execPromise(`which ${cmd}`);
     }
+    return true;
+  } catch {
+    // Fall back to JAVA_HOME for Java tools when PATH is not configured.
+    if (process.env.JAVA_HOME && (cmd === 'javac' || cmd === 'java')) {
+      const javaPath = path.join(process.env.JAVA_HOME, 'bin', `${cmd}${process.platform === 'win32' ? '.exe' : ''}`);
+      return await checkCommandVersion(javaPath);
+    }
+    return false;
   }
 };
 
 const findAvailableCompiler = async (candidates) => {
   for (const c of candidates) {
-    if (await isCommandAvailable(c)) return c;
+    if (await isCommandAvailable(c)) {
+      if (process.env.JAVA_HOME && (c === 'javac' || c === 'java')) {
+        const javaPath = path.join(process.env.JAVA_HOME, 'bin', `${c}${process.platform === 'win32' ? '.exe' : ''}`);
+        if (await checkCommandVersion(javaPath)) return javaPath;
+      }
+      return c;
+    }
   }
   return null;
+};
+
+export const getSupportedLanguages = async () => {
+  const supported = ["javascript", "python"];
+
+  const javacCmd = await findAvailableCompiler(["javac"]);
+  const javaCmd = await findAvailableCompiler(["java"]);
+  if (javacCmd && javaCmd) {
+    supported.push("java");
+  }
+
+  const cppCmd = await findAvailableCompiler(["g++", "clang++"]);
+  if (cppCmd) supported.push("cpp");
+
+  const cCmd = await findAvailableCompiler(["gcc", "clang"]);
+  if (cCmd) supported.push("c");
+
+  return supported;
 };
 
 const normalizeTemplateKey = (templateKey) => templateKey || "twoSum";

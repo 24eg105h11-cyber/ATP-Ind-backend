@@ -1,5 +1,5 @@
 import exp from "express";
-import { executeCode } from "../utils/executor.js";
+import { executeCode, getSupportedLanguages } from "../utils/executor.js";
 
 export const PlaygroundAPI = exp.Router();
 
@@ -19,6 +19,15 @@ PlaygroundAPI.post("/run", async (req, res, next) => {
     });
   } catch (err) {
     return res.status(500).json({ message: err.message });
+  }
+});
+
+PlaygroundAPI.get("/languages", async (req, res, next) => {
+  try {
+    const supported = await getSupportedLanguages();
+    return res.status(200).json({ message: "Supported languages fetched", payload: supported });
+  } catch (err) {
+    return next(err);
   }
 });
 
