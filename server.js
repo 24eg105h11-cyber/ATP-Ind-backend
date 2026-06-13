@@ -42,7 +42,10 @@ apiRouter.use("/playground", PlaygroundRoutes);
 app.use("/api", apiRouter);
 
 // DB Connection
-const mongoUrl = process.env.DB_URL;
+const rawDbUrl = process.env.DB_URL;
+const mongoUrl = rawDbUrl
+  ? String(rawDbUrl).trim().replace(/^["']|["']$/g, "")
+  : "";
 const startServer = () => {
   const PORT = process.env.PORT || 4000;
   app.listen(PORT, () => {
@@ -53,8 +56,15 @@ const startServer = () => {
 if (!mongoUrl) {
   console.error("Missing DB_URL in .env");
   process.exit(1);
-} else {
-  const needsDbName = mongoUrl.startsWith("mongodb+srv://") && (() => {
+}
+
+if (!/^mongodb(?:\+srv)?:\/\//i.test(mongoUrl)) {
+  console.error("Invalid DB_URL scheme. DB_URL must start with mongodb:// or mongodb+srv://");
+  console.error("Please check your environment variable value and remove any surrounding quotes or whitespace.");
+  process.exit(1);
+}
+
+const needsDbName = mongoUrl.startsWith("mongodb+srv://") && (() => {
     try {
       const parsed = new URL(mongoUrl);
       return parsed.pathname === "/" || parsed.pathname === "";
@@ -133,11 +143,6 @@ app.use((err, req, res, next) => {
     message: "Something went wrong!",
     error: process.env.NODE_ENV === "development" ? err.message : "Internal Server Error"
   });
-});
-
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
 });
 
 export default app;
