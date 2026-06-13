@@ -1,10 +1,16 @@
 import mongoose from "mongoose";
+import bcrypt from "bcrypt";
 import { config } from "dotenv";
+import { User } from "../Models/UserModel.js";
 import { Problem } from "../Models/ProblemModel.js";
 import { Testcase } from "../Models/TestcaseModel.js";
 import { defaultProblems } from "./defaultProblemData.js";
 
 config();
+
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@example.com";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 
 export const seedDefaultProblems = async () => {
   for (const problemData of defaultProblems) {
@@ -47,6 +53,26 @@ export const seedDefaultProblems = async () => {
       await Testcase.insertMany(casesToInsert);
     }
   }
+
+  await seedDefaultAdmin();
+};
+
+const seedDefaultAdmin = async () => {
+  const existingAdmin = await User.findOne({ role: "admin" });
+  if (existingAdmin) {
+    return;
+  }
+
+  const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 10);
+  const adminUser = new User({
+    username: ADMIN_USERNAME,
+    email: ADMIN_EMAIL,
+    password: hashedPassword,
+    role: "admin",
+  });
+
+  await adminUser.save();
+  console.log(`Default admin created: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`);
 };
 
 // If run directly, connect to DB and run seeding

@@ -59,12 +59,15 @@ userApp.post("/login", async (req, res, next) => {
       { expiresIn: "1d" }
     );
 
-    res.cookie("token", token, {
+    const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "none",
       maxAge: 24 * 60 * 60 * 1000,
-    });
+      path: "/",
+    };
+
+    res.cookie("token", token, cookieOptions);
 
     return res.status(200).json({
       message: "Login successful",
@@ -82,7 +85,12 @@ userApp.post("/login", async (req, res, next) => {
 
 // Logout
 userApp.post("/logout", (req, res) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "none",
+    path: "/",
+  });
   return res.status(200).json({ message: "Logged out" });
 });
 
