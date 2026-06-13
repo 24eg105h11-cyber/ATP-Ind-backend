@@ -178,23 +178,50 @@ export const executeCode = async (templateKey, language, code, input) => {
     switch (lang) {
       case "python":
       case "python3":
-      case "py":
+      case "py": {
+        const pythonCmd = await findAvailableCompiler(["python", "python3"]);
+        if (!pythonCmd) {
+          throw new Error(
+            "Python runtime unavailable: install Python or choose another language."
+          );
+        }
         fileName = "solution.py";
-        runCmd = "python";
+        runCmd = pythonCmd;
         runArgs = [fileName];
         break;
+      }
       case "javascript":
-      case "js":
+      case "js": {
+        const nodeCmd = await findAvailableCompiler(["node"]);
+        if (!nodeCmd) {
+          throw new Error(
+            "Node.js runtime unavailable: install Node.js or choose another language."
+          );
+        }
         fileName = "solution.js";
-        runCmd = "node";
+        runCmd = nodeCmd;
         runArgs = [fileName];
         break;
-      case "java":
+      }
+      case "java": {
         fileName = "Solution.java";
-        compileCmd = `javac ${fileName}`;
-        runCmd = "java";
+        const javacCmd = await findAvailableCompiler(["javac"]);
+        const javaCmd = await findAvailableCompiler(["java"]);
+        if (!javacCmd) {
+          throw new Error(
+            "Java toolchain unavailable: 'javac' is not installed. Install a JDK or choose a different language."
+          );
+        }
+        if (!javaCmd) {
+          throw new Error(
+            "Java runtime unavailable: 'java' is not installed. Install a JDK or choose a different language."
+          );
+        }
+        compileCmd = `${javacCmd} ${fileName}`;
+        runCmd = javaCmd;
         runArgs = ["Main"];
         break;
+      }
       case "cpp":
       case "c++":
         fileName = "solution.cpp";
