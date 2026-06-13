@@ -104,7 +104,6 @@ const needsDbName = mongoUrl.startsWith("mongodb+srv://") && (() => {
         }
         process.exit(1);
       });
-  }
 
 // Basic Routes
 app.get("/", (req, res) => {
