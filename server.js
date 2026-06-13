@@ -25,7 +25,7 @@ const app = express();
 // Middlewares
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: [process.env.FRONTEND_URL, process.env.BACKEND_URL].filter(Boolean),
     credentials: true,
   }),
 );
@@ -46,19 +46,44 @@ const mongoUrl = process.env.DB_URL;
 if (!mongoUrl) {
   console.error("Missing DB_URL in .env");
 } else {
-  mongoose.connect(mongoUrl)
-    .then(() => {
-      console.log(`DB server connected`);
-      return seedDefaultProblems();
-    })
-    .then(() => {
-      console.log("Default problems seeded");
-    })
-    .catch(err => {
-      console.error("DB connection error details:");
-      console.error("Error Name:", err.name);
-      console.error("Error Message:", err.message);
-    });
+  const needsDbName = mongoUrl.startsWith("mongodb+srv://") && (() => {
+    try {
+      const parsed = new URL(mongoUrl);
+      return parsed.pathname === "/" || parsed.pathname === "";
+    } catch {
+      return true;
+    }
+  })();
+
+  if (needsDbName) {
+    console.error(
+      "Invalid DB_URL: mongodb+srv URIs must include a database name. Example: mongodb+srv://user:pass@cluster0.b30nexh.mongodb.net/myDatabase?retryWrites=true&w=majority"
+    );
+  } else {
+    mongoose.connect(mongoUrl, {
+        serverSelectionTimeoutMS: 10000,
+      })
+      .then(() => {
+        console.log(`DB server connected`);
+        return seedDefaultProblems();
+      })
+      .then(() => {
+        console.log("Default problems seeded");
+      })
+      .catch(err => {
+        console.error("DB connection error details:");
+        console.error("Error Name:", err.name);
+        console.error("Error Message:", err.message);
+        if (err.message.includes("querySrv")) {
+          console.error(
+            "SRV lookup failed. Check that your MongoDB Atlas cluster is reachable, your network/DNS allows SRV lookups, and your DB_URL is a valid mongodb+srv URI with a database name."
+          );
+          console.error(
+            "If your network blocks SRV/DNS queries, use a standard mongodb:// connection string from Atlas instead of mongodb+srv://."
+          );
+        }
+      });
+  }
 }
 
 // Basic Routes
