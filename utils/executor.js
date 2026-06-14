@@ -280,6 +280,12 @@ export const executeCode = async (templateKey, language, code, input) => {
     return executeWithJudge0(lang, processedCode, input || "");
   }
 
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "Production execution requires Judge0. Set JUDGE0_BASE_URL in your Render environment variables."
+    );
+  }
+
   const runId = uuidv4();
   const tempDir = path.join(os.tmpdir(), "code-playground", runId);
 
