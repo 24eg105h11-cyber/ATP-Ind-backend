@@ -281,8 +281,8 @@ export const executeCode = async (templateKey, language, code, input) => {
   }
 
   if (process.env.NODE_ENV === "production") {
-    throw new Error(
-      "Production execution requires Judge0. Set JUDGE0_BASE_URL in your Render environment variables."
+    console.warn(
+      "Production execution is using local runtime tools. Make sure your Docker image includes Python, Node, Java, and build tools."
     );
   }
 
