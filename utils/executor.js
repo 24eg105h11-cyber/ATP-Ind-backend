@@ -4,6 +4,7 @@ import fs from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import os from "os";
+import axios from "axios";
 
 const execPromise = promisify(exec);
 
@@ -49,7 +50,80 @@ const findAvailableCompiler = async (candidates) => {
   return null;
 };
 
+const judge0LanguageMap = {
+  javascript: 63,
+  python: 71,
+  java: 62,
+  cpp: 54,
+  c: 50,
+};
+
+const getJudge0Config = () => {
+  const baseUrl = String(process.env.JUDGE0_BASE_URL || "").trim();
+  const apiKey = String(process.env.JUDGE0_API_KEY || "").trim();
+  const apiHost = String(process.env.JUDGE0_API_HOST || "").trim();
+  return { baseUrl, apiKey, apiHost };
+};
+
+const useJudge0 = () => {
+  const { baseUrl } = getJudge0Config();
+  return Boolean(baseUrl);
+};
+
+const executeWithJudge0 = async (language, code, input) => {
+  const { baseUrl, apiKey, apiHost } = getJudge0Config();
+  if (!baseUrl) {
+    throw new Error("Judge0 execution is not configured. Set JUDGE0_BASE_URL.");
+  }
+
+  const languageId = judge0LanguageMap[language.toLowerCase()];
+  if (!languageId) {
+    throw new Error(`Judge0 does not support language: ${language}`);
+  }
+
+  const headers = {
+    "Content-Type": "application/json",
+  };
+
+  if (apiKey) {
+    headers["X-RapidAPI-Key"] = apiKey;
+  }
+  if (apiHost) {
+    headers["X-RapidAPI-Host"] = apiHost;
+  }
+
+  const url = `${baseUrl.replace(/\/+$/, "")}/submissions?wait=true&base64_encoded=false`;
+  const payload = {
+    source_code: code,
+    language_id: languageId,
+    stdin: input || "",
+  };
+
+  const res = await axios.post(url, payload, { headers, timeout: 30000 });
+  const data = res.data || {};
+
+  const output = data.stdout || "";
+  const compileOutput = data.compile_output || "";
+  const stderr = data.stderr || "";
+  const message = data.message || "";
+
+  const error = compileOutput || stderr || message || "";
+  const status = error ? "error" : "success";
+
+  return {
+    output: output.trim(),
+    error: error.trim(),
+    status,
+    executionTime: data.time ? Number(data.time) : 0,
+    memoryUsed: data.memory ? Number(data.memory) : 0,
+  };
+};
+
 export const getSupportedLanguages = async () => {
+  if (useJudge0()) {
+    return Object.keys(judge0LanguageMap);
+  }
+
   const supported = ["javascript", "python"];
 
   const javacCmd = await findAvailableCompiler(["javac"]);
@@ -198,19 +272,24 @@ const createExecutionSource = (templateKey, language, code) => {
 };
 
 export const executeCode = async (templateKey, language, code, input) => {
+  const normalizedTemplateKey = normalizeTemplateKey(templateKey);
+  const lang = language.toLowerCase();
+  const processedCode = createExecutionSource(normalizedTemplateKey, lang, code);
+
+  if (useJudge0()) {
+    return executeWithJudge0(lang, processedCode, input || "");
+  }
+
   const runId = uuidv4();
   const tempDir = path.join(os.tmpdir(), "code-playground", runId);
 
   try {
     await fs.mkdir(tempDir, { recursive: true });
 
-    const normalizedTemplateKey = normalizeTemplateKey(templateKey);
-    const lang = language.toLowerCase();
     let fileName;
     let compileCmd;
     let runCmd;
     let runArgs = [];
-    const processedCode = createExecutionSource(normalizedTemplateKey, lang, code);
 
     switch (lang) {
       case "python":
@@ -353,3 +432,5 @@ export const executeCode = async (templateKey, language, code, input) => {
     }
   }
 };
+
+export { createExecutionSource };
