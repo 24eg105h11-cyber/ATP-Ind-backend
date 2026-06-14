@@ -1,4 +1,13 @@
-﻿NOCHANGE
+﻿import exp from "express";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { User } from "../Models/UserModel.js";
+import { Submission } from "../Models/SubmissionModel.js";
+import { verifyToken, getTokenFromRequest, getJwtSecret } from "../middleware/VerifyToken.js";
+
+export const UserAPI = exp.Router();
+const userApp = UserAPI;
+
 const toUserPayload = (body) => {
   const payload = {
     username: body.username,
