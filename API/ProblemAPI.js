@@ -1,26 +1,34 @@
 ﻿import exp from "express";
 import { Problem } from "../Models/ProblemModel.js";
-import { Testcase } from "../Models/TestcaseModel.js";
 import { Submission } from "../Models/SubmissionModel.js";
+import { Testcase } from "../Models/TestcaseModel.js";
 import { verifyToken } from "../middleware/VerifyToken.js";
 
 export const ProblemAPI = exp.Router();
 const problemApp = ProblemAPI;
+
+const normalizeArrayField = (value) => {
+  if (Array.isArray(value)) return value.map(String).map((item) => item.trim()).filter(Boolean);
+  if (typeof value === "string") return value.split(",").map((item) => item.trim()).filter(Boolean);
+  return [];
+};
+
+const normalizeConstraintsField = (value) => {
+  if (Array.isArray(value)) return value.map(String).map((item) => item.trim()).filter(Boolean);
+  if (typeof value === "string") return value.split("\n").map((item) => item.trim()).filter(Boolean);
+  return [];
+};
 
 const toProblemPayload = (body) => {
   const payload = {
     title: body.title,
     description: body.description,
     difficulty: body.difficulty,
-    tags: body.tags,
-    constraints: body.constraints,
-    templateKey: body.templateKey,
-    createdBy: body.createdBy || body.userId
+    tags: normalizeArrayField(body.tags),
+    constraints: normalizeConstraintsField(body.constraints),
   };
 
-  // Remove undefined fields
-  Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
-
+  Object.keys(payload).forEach((key) => payload[key] === undefined && delete payload[key]);
   return payload;
 };
 

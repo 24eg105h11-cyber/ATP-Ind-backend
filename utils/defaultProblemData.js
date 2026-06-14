@@ -1,4 +1,4 @@
-export const defaultProblems = [
+﻿export const defaultProblems = [
   {
     title: "Two Sum",
     description: "Given an array of integers nums and an integer target, return the indices of the two numbers such that they add up to target.",
@@ -65,8 +65,7 @@ export const defaultProblems = [
       { input: "[4,3,2,1]", expectedOutput: "[4,3,2,2]", isSample: false },
       { input: "[9]", expectedOutput: "[1,0]", isSample: false }
     ]
-  }
-  ,
+  },
   {
     title: "Two Sum II - Input Array Is Sorted",
     description: "Given a 1-indexed array of integers numbers that is already sorted in non-decreasing order, find two numbers such that they add up to a specific target number. Return the indices of the two numbers (1-indexed) as an array of length 2.",
