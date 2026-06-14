@@ -5,6 +5,14 @@ import { User } from "../Models/UserModel.js";
 import { Submission } from "../Models/SubmissionModel.js";
 import { verifyToken } from "../middleware/VerifyToken.js";
 
+const getJwtSecret = () => process.env.SECRET_KEY || process.env.JWT_SECRET || "secret";
+const getTokenFromRequest = (req) => {
+  if (req.cookies?.token) return req.cookies.token;
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  if (authHeader?.startsWith("Bearer ")) return authHeader.slice(7);
+  return null;
+};
+
 export const UserAPI = exp.Router();
 const userApp = UserAPI;
 
@@ -71,6 +79,7 @@ userApp.post("/login", async (req, res, next) => {
 
     return res.status(200).json({
       message: "Login successful",
+      token,
       payload: {
         id: user._id,
         username: user.username,
@@ -97,12 +106,12 @@ userApp.post("/logout", (req, res) => {
 // Get current user info (Silent check to avoid console noise)
 userApp.get("/me", async (req, res, next) => {
   try {
-    const token = req.cookies?.token;
+    const token = getTokenFromRequest(req);
     if (!token) {
       return res.status(200).json({ message: "Not logged in", payload: null });
     }
 
-    const jwtSecret = process.env.SECRET_KEY || process.env.JWT_SECRET || "secret";
+    const jwtSecret = getJwtSecret();
     const decoded = jwt.verify(token, jwtSecret);
     
     const user = await User.findById(decoded.id).select("-password");
