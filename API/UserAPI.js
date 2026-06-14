@@ -1,21 +1,4 @@
-﻿import exp from "express";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import { User } from "../Models/UserModel.js";
-import { Submission } from "../Models/SubmissionModel.js";
-import { verifyToken } from "../middleware/VerifyToken.js";
-
-const getJwtSecret = () => process.env.SECRET_KEY || process.env.JWT_SECRET || "secret";
-const getTokenFromRequest = (req) => {
-  if (req.cookies?.token) return req.cookies.token;
-  const authHeader = req.headers.authorization || req.headers.Authorization;
-  if (authHeader?.startsWith("Bearer ")) return authHeader.slice(7);
-  return null;
-};
-
-export const UserAPI = exp.Router();
-const userApp = UserAPI;
-
+﻿NOCHANGE
 const toUserPayload = (body) => {
   const payload = {
     username: body.username,

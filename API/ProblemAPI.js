@@ -1,12 +1,4 @@
-﻿import exp from "express";
-import { Problem } from "../Models/ProblemModel.js";
-import { Testcase } from "../Models/TestcaseModel.js";
-import { Submission } from "../Models/SubmissionModel.js";
-import { verifyToken } from "../middleware/VerifyToken.js";
-
-export const ProblemAPI = exp.Router();
-const problemApp = ProblemAPI;
-
+﻿NOCHANGE
 const toProblemPayload = (body) => {
   const payload = {
     title: body.title,

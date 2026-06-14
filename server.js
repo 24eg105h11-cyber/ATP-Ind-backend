@@ -1,5 +1,7 @@
+﻿import { config } from "dotenv";
+config();
+
 import express from "express";
-import { config } from "dotenv";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -18,38 +20,22 @@ import SubmissionRoutes from "./API/SubmissionAPI.js";
 import TestcaseRoutes from "./API/TestcaseAPI.js";
 import PlaygroundRoutes from "./API/PlaygroundAPI.js";
 
-config();
-
 const app = express();
+app.set("trust proxy", 1);
 
-// Middlewares
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  process.env.BACKEND_URL,
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-].filter(Boolean);
-
+const FRONTEND_URL = (process.env.FRONTEND_URL || process.env.VITE_FRONTEND_URL || "http://localhost:5173").trim();
 const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    // Allow requests from other valid deployment origins dynamically.
-    // This avoids 403 failures when the frontend origin differs from env values.
-    return callback(null, true);
-  },
+  origin: FRONTEND_URL,
   credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Requested-With", "Origin"],
 };
 
 app.use(cors(corsOptions));
-app.use(cookieParser());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-// Routes
 const apiRouter = express.Router();
 apiRouter.use("/users", UserRoutes);
 apiRouter.use("/problems", ProblemRoutes);
@@ -61,8 +47,9 @@ app.use("/api", apiRouter);
 // DB Connection
 const rawDbUrl = process.env.DB_URL;
 const mongoUrl = rawDbUrl
-  ? String(rawDbUrl).trim().replace(/^["']|["']$/g, "")
+  ? String(rawDbUrl).trim().replace(/^['\"]|['\"]$/g, "")
   : "";
+
 const startServer = () => {
   const PORT = process.env.PORT || 4000;
   app.listen(PORT, () => {
@@ -97,7 +84,8 @@ if (needsDbName) {
   process.exit(1);
 }
 
-mongoose.connect(mongoUrl, {
+mongoose
+  .connect(mongoUrl, {
     serverSelectionTimeoutMS: 10000,
   })
   .then(() => {
@@ -108,7 +96,7 @@ mongoose.connect(mongoUrl, {
     console.log("Default problems seeded");
     startServer();
   })
-  .catch(err => {
+  .catch((err) => {
     console.error("DB connection error details:");
     console.error("Error Name:", err.name);
     console.error("Error Message:", err.message);
@@ -146,18 +134,15 @@ app.use((req, res) => {
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error("Error handler:", err);
-  
   if (err.name === "ValidationError") {
     return res.status(400).json({ message: "Validation error", error: err.message });
   }
-
   if (err.name === "CastError") {
     return res.status(400).json({ message: "Invalid ID format", error: err.message });
   }
-
-  res.status(500).json({ 
+  res.status(500).json({
     message: "Something went wrong!",
-    error: process.env.NODE_ENV === "development" ? err.message : "Internal Server Error"
+    error: process.env.NODE_ENV === "development" ? err.message : "Internal Server Error",
   });
 });
 
