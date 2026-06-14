@@ -232,7 +232,7 @@ const buildCppSource = (templateKey, code) => {
     ? `int target;\n        cin >> target;\n        Solution sol;\n        vector<int> result = sol.${methodName}(nums, target);`
     : `Solution sol;\n        vector<int> result = sol.${methodName}(nums);`;
 
-  return `#include <iostream>\n#include <vector>\n#include <string>\n#include <sstream>\n#include <algorithm>\nusing namespace std;\n${code}\n\nint main() {\n    string line;\n    if (getline(cin, line)) {\n        line.erase(remove(line.begin(), line.end(), '['), line.end());\n        line.erase(remove(line.begin(), line.end(), ']'), line.end());\n        stringstream ss(line);\n        vector<int> nums;\n        string val;\n        while (getline(ss, val, ',')) {\n            if (!val.empty()) {\n                nums.push_back(stoi(val));\n            }\n        }\n        ${invocation}\n        cout << "[";\n        for (size_t i = 0; i < result.size(); ++i) {\n            cout << result[i];\n            if (i + 1 < result.size()) cout << ",";\n        }\n        cout << "]" << endl;\n    }\n    return 0;\n}`;
+  return `#include <bits/stdc++.h>\nusing namespace std;\n${code}\n\nint main() {\n    string line;\n    if (getline(cin, line)) {\n        line.erase(remove(line.begin(), line.end(), '['), line.end());\n        line.erase(remove(line.begin(), line.end(), ']'), line.end());\n        stringstream ss(line);\n        vector<int> nums;\n        string val;\n        while (getline(ss, val, ',')) {\n            if (!val.empty()) {\n                nums.push_back(stoi(val));\n            }\n        }\n        ${invocation}\n        cout << "[";\n        for (size_t i = 0; i < result.size(); ++i) {\n            cout << result[i];\n            if (i + 1 < result.size()) cout << ",";\n        }\n        cout << "]" << endl;\n    }\n    return 0;\n}`;
 };
 
 const buildCSource = (templateKey, code) => {
@@ -244,7 +244,7 @@ const buildCSource = (templateKey, code) => {
         ? `int* result = productExceptSelf(nums, numsSize, &returnSize);`
         : `int* result = plusOne(nums, numsSize, &returnSize);`;
 
-  return `#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n${code}\n\nstatic int* parseArray(const char* line, int* size) {\n    char* copy = strdup(line);\n    copy[strcspn(copy, "\n")] = 0;\n    char* ptr = copy;\n    while (*ptr == '[' || *ptr == ' ' || *ptr == '\\t') ptr++;\n    char* end = ptr + strlen(ptr);\n    while (end > ptr && (end[-1] == ']' || end[-1] == ' ')) {\n        end--;\n    }\n    *end = '\\0';\n    int capacity = 8;\n    int* nums = malloc(sizeof(int) * capacity);\n    int count = 0;\n    char* token = strtok(ptr, ",");\n    while (token) {\n        if (count >= capacity) {\n            capacity *= 2;\n            nums = realloc(nums, sizeof(int) * capacity);\n        }\n        nums[count++] = atoi(token);\n        token = strtok(NULL, ",");\n    }\n    free(copy);\n    *size = count;\n    return nums;\n}\n\nint main() {\n    char buffer[2048];\n    if (!fgets(buffer, sizeof(buffer), stdin)) return 0;\n    int numsSize = 0;\n    int* nums = parseArray(buffer, &numsSize);\n    int returnSize = 0;\n    ${invocation}\n    printf("[");\n    for (int i = 0; i < returnSize; ++i) {\n        printf("%d", result[i]);\n        if (i + 1 < returnSize) printf(",");\n    }\n    printf("]\\n");\n    return 0;\n}`;
+  return `#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <stdbool.h>\n#include <math.h>\n${code}\n\nstatic int* parseArray(const char* line, int* size) {\n    char* copy = strdup(line);\n    copy[strcspn(copy, "\n")] = 0;\n    char* ptr = copy;\n    while (*ptr == '[' || *ptr == ' ' || *ptr == '\\t') ptr++;\n    char* end = ptr + strlen(ptr);\n    while (end > ptr && (end[-1] == ']' || end[-1] == ' ')) {\n        end--;\n    }\n    *end = '\\0';\n    int capacity = 8;\n    int* nums = malloc(sizeof(int) * capacity);\n    int count = 0;\n    char* token = strtok(ptr, ",");\n    while (token) {\n        if (count >= capacity) {\n            capacity *= 2;\n            nums = realloc(nums, sizeof(int) * capacity);\n        }\n        nums[count++] = atoi(token);\n        token = strtok(NULL, ",");\n    }\n    free(copy);\n    *size = count;\n    return nums;\n}\n\nint main() {\n    char buffer[2048];\n    if (!fgets(buffer, sizeof(buffer), stdin)) return 0;\n    int numsSize = 0;\n    int* nums = parseArray(buffer, &numsSize);\n    int returnSize = 0;\n    ${invocation}\n    printf("[");\n    for (int i = 0; i < returnSize; ++i) {\n        printf("%d", result[i]);\n        if (i + 1 < returnSize) printf(",");\n    }\n    printf("]\\n");\n    return 0;\n}`;
 };
 
 const createExecutionSource = (templateKey, language, code) => {
@@ -255,12 +255,12 @@ const createExecutionSource = (templateKey, language, code) => {
     case "python":
     case "python3":
     case "py":
-      return `${code}${buildPythonWrapper(normalizedTemplateKey)}`;
+      return `from typing import *\nfrom collections import *\nfrom math import *\nimport heapq\nimport bisect\n\n${code}${buildPythonWrapper(normalizedTemplateKey)}`;
     case "javascript":
     case "js":
       return `${code}\n\n${buildJsWrapper(normalizedTemplateKey)}`;
     case "java":
-      return `import java.util.*;\nimport java.util.stream.*;\n${code}\n\n${buildJavaWrapper(normalizedTemplateKey)}`;
+      return `import java.util.*;\nimport java.io.*;\nimport java.math.*;\n${code}\n\n${buildJavaWrapper(normalizedTemplateKey)}`;
     case "cpp":
     case "c++":
       return buildCppSource(normalizedTemplateKey, code);
