@@ -141,10 +141,20 @@ export const getSupportedLanguages = async () => {
   return supported;
 };
 
-const normalizeTemplateKey = (templateKey) => templateKey || "twoSum";
+const normalizeProblemTitle = (title) => String(title || "").trim().toLowerCase();
 
-const buildJsWrapper = (templateKey) => {
-  switch (templateKey) {
+export const getExecutionTemplateName = (title) => {
+  const normalizedTitle = normalizeProblemTitle(title);
+  if (normalizedTitle.includes("running sum")) return "runningSum";
+  if (normalizedTitle.includes("product except self")) return "productExceptSelf";
+  if (normalizedTitle.includes("plus one")) return "plusOne";
+  return "twoSum";
+};
+
+const normalizeExecutionTemplate = (executionTemplate) => executionTemplate || "twoSum";
+
+const buildJsWrapper = (executionTemplate) => {
+  switch (executionTemplate) {
     case "runningSum":
       return `${
         "const fs = require('fs');\n"
@@ -165,8 +175,8 @@ const buildJsWrapper = (templateKey) => {
   }
 };
 
-const buildPythonWrapper = (templateKey) => {
-  switch (templateKey) {
+const buildPythonWrapper = (executionTemplate) => {
+  switch (executionTemplate) {
     case "runningSum":
       return `${
         "\nif __name__ == \"__main__\":\n    import sys\n    import json\n    try:\n        lines = sys.stdin.read().splitlines()\n        nums = json.loads(lines[0])\n        sol = Solution()\n        result = sol.runningSum(nums)\n        print(json.dumps(result))\n    except Exception as e:\n        print(str(e), file=sys.stderr)\n        raise\n"
@@ -187,94 +197,94 @@ const buildPythonWrapper = (templateKey) => {
   }
 };
 
-const buildJavaWrapper = (templateKey) => {
-  const methodName = templateKey === "runningSum"
+const buildJavaWrapper = (executionTemplate) => {
+  const methodName = executionTemplate === "runningSum"
     ? "runningSum"
-    : templateKey === "productExceptSelf"
+    : executionTemplate === "productExceptSelf"
       ? "productExceptSelf"
-      : templateKey === "plusOne"
+      : executionTemplate === "plusOne"
         ? "plusOne"
         : "twoSum";
 
-  const invocation = templateKey === "twoSum"
+  const invocation = executionTemplate === "twoSum"
     ? `int target = Integer.parseInt(sc.nextLine().trim());\n                Solution sol = new Solution();\n                int[] result = sol.${methodName}(nums, target);\n                System.out.println(Arrays.toString(result).replace(" ", ""));`
     : `Solution sol = new Solution();\n                int[] result = sol.${methodName}(nums);\n                System.out.println(Arrays.toString(result).replace(" ", ""));`;
 
   return `class Main {\n    private static int[] parseArray(String line) {\n        String cleaned = line.replace("[", "").replace("]", "").trim();\n        if (cleaned.isEmpty()) {\n            return new int[0];\n        }\n        return Arrays.stream(cleaned.split(",")).map(String::trim).mapToInt(Integer::parseInt).toArray();\n    }\n\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        try {\n            if (sc.hasNextLine()) {\n                int[] nums = parseArray(sc.nextLine());\n                ${invocation}\n            }\n        } catch (Exception e) {\n            System.err.println(e.getMessage());\n            System.exit(1);\n        }\n    }\n}`;
 };
 
-const buildCppWrapper = (templateKey) => {
-  const methodName = templateKey === "runningSum"
+const buildCppWrapper = (executionTemplate) => {
+  const methodName = executionTemplate === "runningSum"
     ? "runningSum"
-    : templateKey === "productExceptSelf"
+    : executionTemplate === "productExceptSelf"
       ? "productExceptSelf"
-      : templateKey === "plusOne"
+      : executionTemplate === "plusOne"
         ? "plusOne"
         : "twoSum";
 
-  const body = templateKey === "twoSum"
+  const body = executionTemplate === "twoSum"
     ? `int target;\n        cin >> target;\n        Solution sol;\n        vector<int> result = sol.${methodName}(nums, target);`
     : `Solution sol;\n        vector<int> result = sol.${methodName}(nums);`;
 
   return `#include <iostream>\n#include <vector>\n#include <string>\n#include <sstream>\n#include <algorithm>\nusing namespace std;\n${body.includes("target") ? "" : ""}\n${body.includes("target") ? "" : ""}`;
 };
 
-const buildCppSource = (templateKey, code) => {
-  const methodName = templateKey === "runningSum"
+const buildCppSource = (executionTemplate, code) => {
+  const methodName = executionTemplate === "runningSum"
     ? "runningSum"
-    : templateKey === "productExceptSelf"
+    : executionTemplate === "productExceptSelf"
       ? "productExceptSelf"
-      : templateKey === "plusOne"
+      : executionTemplate === "plusOne"
         ? "plusOne"
         : "twoSum";
 
-  const invocation = templateKey === "twoSum"
+  const invocation = executionTemplate === "twoSum"
     ? `int target;\n        cin >> target;\n        Solution sol;\n        vector<int> result = sol.${methodName}(nums, target);`
     : `Solution sol;\n        vector<int> result = sol.${methodName}(nums);`;
 
   return `#include <bits/stdc++.h>\nusing namespace std;\n${code}\n\nint main() {\n    string line;\n    if (getline(cin, line)) {\n        line.erase(remove(line.begin(), line.end(), '['), line.end());\n        line.erase(remove(line.begin(), line.end(), ']'), line.end());\n        stringstream ss(line);\n        vector<int> nums;\n        string val;\n        while (getline(ss, val, ',')) {\n            if (!val.empty()) {\n                nums.push_back(stoi(val));\n            }\n        }\n        ${invocation}\n        cout << "[";\n        for (size_t i = 0; i < result.size(); ++i) {\n            cout << result[i];\n            if (i + 1 < result.size()) cout << ",";\n        }\n        cout << "]" << endl;\n    }\n    return 0;\n}`;
 };
 
-const buildCSource = (templateKey, code) => {
-  const invocation = templateKey === "twoSum"
+const buildCSource = (executionTemplate, code) => {
+  const invocation = executionTemplate === "twoSum"
     ? `int target;\n        scanf("%d", &target);\n        int* result = twoSum(nums, numsSize, target, &returnSize);`
-    : templateKey === "runningSum"
+    : executionTemplate === "runningSum"
       ? `int* result = runningSum(nums, numsSize, &returnSize);`
-      : templateKey === "productExceptSelf"
+      : executionTemplate === "productExceptSelf"
         ? `int* result = productExceptSelf(nums, numsSize, &returnSize);`
         : `int* result = plusOne(nums, numsSize, &returnSize);`;
 
   return `#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <stdbool.h>\n#include <math.h>\n${code}\n\nstatic int* parseArray(const char* line, int* size) {\n    char* copy = strdup(line);\n    copy[strcspn(copy, "\n")] = 0;\n    char* ptr = copy;\n    while (*ptr == '[' || *ptr == ' ' || *ptr == '\\t') ptr++;\n    char* end = ptr + strlen(ptr);\n    while (end > ptr && (end[-1] == ']' || end[-1] == ' ')) {\n        end--;\n    }\n    *end = '\\0';\n    int capacity = 8;\n    int* nums = malloc(sizeof(int) * capacity);\n    int count = 0;\n    char* token = strtok(ptr, ",");\n    while (token) {\n        if (count >= capacity) {\n            capacity *= 2;\n            nums = realloc(nums, sizeof(int) * capacity);\n        }\n        nums[count++] = atoi(token);\n        token = strtok(NULL, ",");\n    }\n    free(copy);\n    *size = count;\n    return nums;\n}\n\nint main() {\n    char buffer[2048];\n    if (!fgets(buffer, sizeof(buffer), stdin)) return 0;\n    int numsSize = 0;\n    int* nums = parseArray(buffer, &numsSize);\n    int returnSize = 0;\n    ${invocation}\n    printf("[");\n    for (int i = 0; i < returnSize; ++i) {\n        printf("%d", result[i]);\n        if (i + 1 < returnSize) printf(",");\n    }\n    printf("]\\n");\n    return 0;\n}`;
 };
 
-const createExecutionSource = (templateKey, language, code) => {
-  const normalizedTemplateKey = normalizeTemplateKey(templateKey);
+const createExecutionSource = (executionTemplate, language, code) => {
+  const normalizedTemplate = normalizeExecutionTemplate(executionTemplate);
   const lang = language.toLowerCase();
 
   switch (lang) {
     case "python":
     case "python3":
     case "py":
-      return `from typing import *\nfrom collections import *\nfrom math import *\nimport heapq\nimport bisect\n\n${code}${buildPythonWrapper(normalizedTemplateKey)}`;
+      return `from typing import *\nfrom collections import *\nfrom math import *\nimport heapq\nimport bisect\n\n${code}${buildPythonWrapper(normalizedTemplate)}`;
     case "javascript":
     case "js":
-      return `${code}\n\n${buildJsWrapper(normalizedTemplateKey)}`;
+      return `${code}\n\n${buildJsWrapper(normalizedTemplate)}`;
     case "java":
-      return `import java.util.*;\nimport java.io.*;\nimport java.math.*;\n${code}\n\n${buildJavaWrapper(normalizedTemplateKey)}`;
+      return `import java.util.*;\nimport java.io.*;\nimport java.math.*;\n${code}\n\n${buildJavaWrapper(normalizedTemplate)}`;
     case "cpp":
     case "c++":
-      return buildCppSource(normalizedTemplateKey, code);
+      return buildCppSource(normalizedTemplate, code);
     case "c":
-      return buildCSource(normalizedTemplateKey, code);
+      return buildCSource(normalizedTemplate, code);
     default:
       throw new Error(`Language ${language} is not supported for local execution.`);
   }
 };
 
-export const executeCode = async (templateKey, language, code, input) => {
-  const normalizedTemplateKey = normalizeTemplateKey(templateKey);
+export const executeCode = async (executionTemplate, language, code, input) => {
+  const normalizedTemplate = normalizeExecutionTemplate(executionTemplate);
   const lang = language.toLowerCase();
-  const processedCode = createExecutionSource(normalizedTemplateKey, lang, code);
+  const processedCode = createExecutionSource(normalizedTemplate, lang, code);
 
   if (useJudge0()) {
     return executeWithJudge0(lang, processedCode, input || "");
@@ -447,4 +457,4 @@ export const executeCode = async (templateKey, language, code, input) => {
   }
 };
 
-export { createExecutionSource };
+export { createExecutionSource, getExecutionTemplateName };

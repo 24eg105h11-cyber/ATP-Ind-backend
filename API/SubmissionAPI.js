@@ -4,7 +4,7 @@ import { Submission } from "../Models/SubmissionModel.js";
 import { Testcase } from "../Models/TestcaseModel.js";
 import { User } from "../Models/UserModel.js";
 import { verifyToken } from "../middleware/VerifyToken.js";
-import { executeCode } from "../utils/executor.js";
+import { executeCode, getExecutionTemplateName } from "../utils/executor.js";
 import { defaultProblems } from "../utils/defaultProblemData.js";
 
 export const SubmissionAPI = exp.Router();
@@ -36,7 +36,7 @@ submissionApp.post("/", verifyToken("user", "admin"), async (req, res, next) => 
     if (!problem) {
       return res.status(404).json({ message: "Problem not found" });
     }
-    const templateKey = problem.templateKey || "twoSum";
+    const executionTemplate = getExecutionTemplateName(problem.title);
     
     // 1. Save initial submission
     const submission = new Submission(data);
@@ -47,7 +47,7 @@ submissionApp.post("/", verifyToken("user", "admin"), async (req, res, next) => 
     
     // FALLBACK: If DB is empty, use more robust evaluation cases to simulate hidden ones
     if (testcases.length === 0) {
-      const fallbackProblem = defaultProblems.find((item) => item.templateKey === templateKey);
+      const fallbackProblem = defaultProblems.find((item) => item.title === problem.title);
       testcases = fallbackProblem?.testcases || [];
     }
 
@@ -59,7 +59,7 @@ submissionApp.post("/", verifyToken("user", "admin"), async (req, res, next) => 
     const startTimeResult = Date.now();
 
     for (const test of testcases) {
-      const result = await executeCode(templateKey, data.language, data.code, test.input);
+      const result = await executeCode(executionTemplate, data.language, data.code, test.input);
       // capture latest output for persistence
       if (result && typeof result.output !== "undefined") {
         lastOutput = result.output;

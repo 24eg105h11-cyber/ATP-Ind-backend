@@ -9,7 +9,6 @@
       "-10^9 <= nums[i] <= 10^9",
       "Only one valid answer exists."
     ],
-    templateKey: "twoSum",
     testcases: [
       { input: "[2,7,11,15]\n9", expectedOutput: "[0,1]", isSample: true },
       { input: "[3,2,4]\n6", expectedOutput: "[1,2]", isSample: false },
@@ -25,7 +24,6 @@
       "1 <= nums.length <= 1000",
       "-10^4 <= nums[i] <= 10^4"
     ],
-    templateKey: "runningSum",
     testcases: [
       { input: "[1,2,3,4]", expectedOutput: "[1,3,6,10]", isSample: true },
       { input: "[1,1,1,1,1]", expectedOutput: "[1,2,3,4,5]", isSample: false },
@@ -42,7 +40,6 @@
       "-30 <= nums[i] <= 30",
       "The product of any prefix or suffix is guaranteed to fit in a 32-bit integer."
     ],
-    templateKey: "productExceptSelf",
     testcases: [
       { input: "[1,2,3,4]", expectedOutput: "[24,12,8,6]", isSample: true },
       { input: "[-1,1,0,-3,3]", expectedOutput: "[0,0,9,0,0]", isSample: false },
@@ -59,7 +56,6 @@
       "0 <= digits[i] <= 9",
       "digits does not contain any leading 0s"
     ],
-    templateKey: "plusOne",
     testcases: [
       { input: "[1,2,3]", expectedOutput: "[1,2,4]", isSample: true },
       { input: "[4,3,2,1]", expectedOutput: "[4,3,2,2]", isSample: false },
@@ -76,7 +72,6 @@
       "-1000 <= numbers[i] <= 1000",
       "The tests are generated such that there is exactly one solution"
     ],
-    templateKey: "twoSum",
     testcases: [
       { input: "[2,7,11,15]\n9", expectedOutput: "[1,2]", isSample: true },
       { input: "[2,3,4]\n6", expectedOutput: "[1,3]", isSample: false },

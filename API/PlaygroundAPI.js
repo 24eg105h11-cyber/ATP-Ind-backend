@@ -1,17 +1,26 @@
 import exp from "express";
-import { executeCode, getSupportedLanguages } from "../utils/executor.js";
+import { Problem } from "../Models/ProblemModel.js";
+import { executeCode, getExecutionTemplateName, getSupportedLanguages } from "../utils/executor.js";
 
 export const PlaygroundAPI = exp.Router();
 
 PlaygroundAPI.post("/run", async (req, res, next) => {
   try {
-    const { language, code, input, templateKey } = req.body;
+    const { language, code, input, problemId } = req.body;
     
     if (!language || !code) {
       return res.status(400).json({ message: "Language and code are required" });
     }
 
-    const result = await executeCode(templateKey, language, code, input || "");
+    let executionTemplate = "twoSum";
+    if (problemId) {
+      const problem = await Problem.findById(problemId);
+      if (problem?.title) {
+        executionTemplate = getExecutionTemplateName(problem.title);
+      }
+    }
+
+    const result = await executeCode(executionTemplate, language, code, input || "");
     
     return res.status(200).json({ 
       message: "Execution successful", 

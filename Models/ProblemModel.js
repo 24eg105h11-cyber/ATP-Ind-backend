@@ -21,10 +21,6 @@ const problemSchema = new mongoose.Schema({
     constraints: [{
         type: String
     }],
-    templateKey: {
-        type: String,
-        default: "twoSum"
-    },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"

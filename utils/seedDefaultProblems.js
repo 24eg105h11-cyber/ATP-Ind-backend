@@ -23,12 +23,10 @@ export const seedDefaultProblems = async () => {
         difficulty: problemData.difficulty,
         tags: problemData.tags,
         constraints: problemData.constraints,
-        templateKey: problemData.templateKey,
       });
       await problem.save();
     } else {
       const needsUpdate =
-        problem.templateKey !== problemData.templateKey ||
         problem.description !== problemData.description ||
         problem.difficulty !== problemData.difficulty;
 
@@ -37,7 +35,6 @@ export const seedDefaultProblems = async () => {
         problem.difficulty = problemData.difficulty;
         problem.tags = problemData.tags;
         problem.constraints = problemData.constraints;
-        problem.templateKey = problemData.templateKey;
         await problem.save();
       }
     }
