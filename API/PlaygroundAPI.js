@@ -21,7 +21,14 @@ PlaygroundAPI.post("/run", async (req, res, next) => {
     }
 
     const result = await executeCode(executionTemplate, language, code, input || "");
-    
+
+    console.log("=== PLAYGROUND EXECUTION DEBUG ===");
+    console.log("Language:", language);
+    console.log("Execution template:", executionTemplate);
+    console.log("Raw execution output:", JSON.stringify(result.output));
+    console.log("Raw execution error:", JSON.stringify(result.error));
+    console.log("Execution status:", result.status);
+
     return res.status(200).json({ 
       message: "Execution successful", 
       payload: result 

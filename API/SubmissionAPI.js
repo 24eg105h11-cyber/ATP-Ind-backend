@@ -59,28 +59,40 @@ submissionApp.post("/", verifyToken("user", "admin"), async (req, res, next) => 
     let passedCount = 0;
     const startTimeResult = Date.now();
 
-    for (const test of testcases) {
+    for (const [index, test] of testcases.entries()) {
       const result = await executeCode(executionTemplate, data.language, data.code, test.input);
       // capture latest output for persistence
       if (result && typeof result.output !== "undefined") {
         lastOutput = result.output;
       }
-      
-      if (result.status !== "success") {
-        allPassed = false;
-        finalStatus = "runtime error";
-        firstErrorOutput = result.error || "Runtime Error";
-        break;
-      }
 
       const actualOutput = String(result.output ?? "");
       const expectedOutput = String(test.expectedOutput ?? "");
 
-      if (!compareOutputs(actualOutput, expectedOutput)) {
+      console.log("=== SUBMISSION TEST DEBUG ===");
+      console.log("Test case index:", index);
+      console.log("Raw actual output:", JSON.stringify(actualOutput));
+      console.log("Raw expected output:", JSON.stringify(expectedOutput));
+      console.log("Execution status:", result.status);
+      console.log("Execution error:", result.error);
+
+      if (result.status !== "success") {
         allPassed = false;
-        finalStatus = "wrong answer";
+        finalStatus = "runtime error";
+        firstErrorOutput = result.error || "Runtime Error";
+        console.log("Submission result: runtime error on test", index);
         break;
       }
+
+      const comparisonPassed = compareOutputs(actualOutput, expectedOutput);
+      if (!comparisonPassed) {
+        allPassed = false;
+        finalStatus = "wrong answer";
+        console.log("Submission result: wrong answer on test", index);
+        break;
+      }
+
+      console.log("Submission result: passed test", index);
       passedCount++;
     }
 

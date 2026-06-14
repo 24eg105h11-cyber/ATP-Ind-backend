@@ -1,6 +1,11 @@
 const normalizeWhitespace = (value) => {
   const text = typeof value === "string" ? value : String(value ?? "");
-  return text.replace(/\r\n/g, "\n").replace(/\t/g, " ").replace(/\s+/g, " ").trim();
+  return text
+    .replace(/\u00A0/g, " ")
+    .replace(/\r\n/g, "\n")
+    .replace(/[\r\n\t]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 };
 
 const normalizeJsonLikeText = (value) => {
@@ -83,20 +88,68 @@ const compareObjects = (a, b) => {
   return a === b;
 };
 
+const logComparisonDebug = ({ actualOutput, expectedOutput, normalizedActual, normalizedExpected, parsedActual, parsedExpected, comparisonPath, result, failureReason }) => {
+  console.log("=== OUTPUT COMPARISON DEBUG ===");
+  console.log("Raw actual output:", JSON.stringify(actualOutput));
+  console.log("Raw expected output:", JSON.stringify(expectedOutput));
+  console.log("Normalized actual:", JSON.stringify(normalizedActual));
+  console.log("Normalized expected:", JSON.stringify(normalizedExpected));
+  console.log("Parsed actual:", parsedActual);
+  console.log("Parsed expected:", parsedExpected);
+  console.log("Comparison path:", comparisonPath);
+  console.log("Final comparison result:", result);
+  if (failureReason) console.log("Failure reason:", failureReason);
+  console.log("=== END OUTPUT COMPARISON DEBUG ===");
+};
+
 export const compareOutputs = (actualOutput, expectedOutput) => {
   const normalizedActual = normalizeWhitespace(actualOutput);
   const normalizedExpected = normalizeWhitespace(expectedOutput);
 
-  if (normalizedActual === normalizedExpected) return true;
+  if (normalizedActual === normalizedExpected) {
+    logComparisonDebug({
+      actualOutput,
+      expectedOutput,
+      normalizedActual,
+      normalizedExpected,
+      parsedActual: normalizedActual,
+      parsedExpected: normalizedExpected,
+      comparisonPath: "normalized string exact match",
+      result: true
+    });
+    return true;
+  }
 
   const parsedActual = safelyParse(normalizedActual);
   const parsedExpected = safelyParse(normalizedExpected);
 
+  let result;
+  let comparisonPath;
+  let failureReason;
+
   if (typeof parsedActual === "string" || typeof parsedExpected === "string") {
-    return normalizeWhitespace(String(parsedActual)) === normalizeWhitespace(String(parsedExpected));
+    result = normalizeWhitespace(String(parsedActual)) === normalizeWhitespace(String(parsedExpected));
+    comparisonPath = "string normalized compare";
+    failureReason = result ? undefined : "Normalized string mismatch after parse";
+  } else {
+    result = compareObjects(parsedActual, parsedExpected);
+    comparisonPath = "deep structured compare";
+    failureReason = result ? undefined : "Parsed values deep mismatch";
   }
 
-  return compareObjects(parsedActual, parsedExpected);
+  logComparisonDebug({
+    actualOutput,
+    expectedOutput,
+    normalizedActual,
+    normalizedExpected,
+    parsedActual,
+    parsedExpected,
+    comparisonPath,
+    result,
+    failureReason
+  });
+
+  return result;
 };
 
 export default compareOutputs;
