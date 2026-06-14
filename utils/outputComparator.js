@@ -7,23 +7,43 @@ const trimAndNormalizeWhitespace = (value) => {
 
 const safelyParse = (value) => {
   if (value === undefined || value === null) return value;
-  const trimmed = String(value).trim();
+  let trimmed = String(value).trim();
 
   if (trimmed === "") return trimmed;
+
+  const normalizePythonLiterals = (text) => {
+    return text
+      .replace(/\bNone\b/g, "null")
+      .replace(/\bTrue\b/g, "true")
+      .replace(/\bFalse\b/g, "false");
+  };
+
+  const normalizeToJson = (text) => {
+    let normalized = text;
+
+    // Convert Python single-quoted strings to JSON double-quoted strings.
+    normalized = normalized.replace(/'([^'\\]*(?:\\.[^'\\]*)*)'/g, '"$1"');
+
+    // Convert unquoted object keys to JSON keys.
+    normalized = normalized.replace(/\b([A-Za-z_][A-Za-z0-9_]*)\b\s*:/g, '"$1":');
+
+    // Convert Python bool/null literals to JSON equivalents.
+    normalized = normalizePythonLiterals(normalized);
+
+    // Remove trailing commas inside arrays/objects.
+    normalized = normalized.replace(/,\s*([}\]])/g, '$1');
+
+    return normalized;
+  };
 
   try {
     return JSON.parse(trimmed);
   } catch (jsonError) {
     try {
-      const normalized = trimmed
-        .replace(/'/g, '"')
-        .replace(/\b([A-Za-z_][A-Za-z0-9_]*)\b\s*:/g, '"$1":')
-        .replace(/:\s*([A-Za-z_][A-Za-z0-9_]*)\s*(?=[,\]}])/g, ':"$1"')
-        .replace(/,\s*([}\]])/g, '$1');
-
+      const normalized = normalizeToJson(trimmed);
       return JSON.parse(normalized);
     } catch {
-      return trimmed;
+      return normalizeToJson(trimmed);
     }
   }
 };
