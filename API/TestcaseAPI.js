@@ -49,7 +49,7 @@ testcaseApp.get("/problem/:problemId", async (req, res, next) => {
     const token = req.cookies?.token;
     let isAdmin = false;
     if (token) {
-      const jwtSecret = process.env.SECRET_KEY || process.env.JWT_SECRET;
+      const jwtSecret = process.env.SECRET_KEY || process.env.JWT_SECRET || "secret";
       try {
         const decoded = jwt.verify(token, jwtSecret);
         isAdmin = decoded.role === "admin";
