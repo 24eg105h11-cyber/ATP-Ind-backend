@@ -1,6 +1,8 @@
 ﻿import { config } from "dotenv";
 config();
 
+import fs from "fs";
+import path from "path";
 import express from "express";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
@@ -43,6 +45,17 @@ apiRouter.use("/submissions", SubmissionRoutes);
 apiRouter.use("/testcases", TestcaseRoutes);
 apiRouter.use("/playground", PlaygroundRoutes);
 app.use("/api", apiRouter);
+
+const frontendDistPath = path.resolve(process.cwd(), "../frontend/IndividualProject/dist");
+if (fs.existsSync(frontendDistPath)) {
+  app.use(express.static(frontendDistPath));
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api") || req.path.startsWith("/health")) {
+      return next();
+    }
+    res.sendFile(path.join(frontendDistPath, "index.html"));
+  });
+}
 
 // DB Connection
 const rawDbUrl = process.env.DB_URL;
