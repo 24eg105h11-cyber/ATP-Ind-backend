@@ -347,28 +347,36 @@ export const executeCode = async (templateKey, language, code, input) => {
       case "cpp":
       case "c++":
         fileName = "solution.cpp";
-        // Try to find an available C++ compiler (g++, clang++)
+        // Try to find an available C++ compiler
         {
-          const compiler = await findAvailableCompiler(["g++", "clang++"]);
+          const compiler = await findAvailableCompiler(["g++", "clang++", "cl.exe", "cl"]);
           if (!compiler) {
             throw new Error(
-              "No C++ compiler found on the server. Install g++ (MinGW or GCC) or clang++, or run the backend in an environment with build tools (WSL on Windows, or a Linux host)."
+              "No C++ compiler found on the server. Install g++ (MinGW or GCC), clang++, or MSVC cl.exe, or run the backend in an environment with build tools."
             );
           }
-          compileCmd = `${compiler} ${fileName} -o solution.exe`;
+          if (compiler.toLowerCase().includes("cl")) {
+            compileCmd = `"${compiler}" /EHsc "${fileName}" /Fe:solution.exe`;
+          } else {
+            compileCmd = `"${compiler}" "${fileName}" -o solution.exe`;
+          }
           runCmd = path.join(tempDir, "solution.exe");
         }
         break;
       case "c":
         fileName = "solution.c";
         {
-          const compiler = await findAvailableCompiler(["gcc", "clang"]);
+          const compiler = await findAvailableCompiler(["gcc", "clang", "cl.exe", "cl"]);
           if (!compiler) {
             throw new Error(
-              "No C compiler found on the server. Install gcc (MinGW or GCC) or clang, or run the backend in an environment with build tools."
+              "No C compiler found on the server. Install gcc (MinGW or GCC), clang, or MSVC cl.exe, or run the backend in an environment with build tools."
             );
           }
-          compileCmd = `${compiler} ${fileName} -o solution.exe`;
+          if (compiler.toLowerCase().includes("cl")) {
+            compileCmd = `"${compiler}" /TC "${fileName}" /Fe:solution.exe`;
+          } else {
+            compileCmd = `"${compiler}" "${fileName}" -o solution.exe`;
+          }
           runCmd = path.join(tempDir, "solution.exe");
         }
         break;
