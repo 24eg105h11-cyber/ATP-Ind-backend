@@ -457,4 +457,4 @@ export const executeCode = async (executionTemplate, language, code, input) => {
   }
 };
 
-export { createExecutionSource, getExecutionTemplateName };
+export { createExecutionSource };
