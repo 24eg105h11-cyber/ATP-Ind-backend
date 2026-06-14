@@ -5,6 +5,7 @@ import { Testcase } from "../Models/TestcaseModel.js";
 import { User } from "../Models/UserModel.js";
 import { verifyToken } from "../middleware/VerifyToken.js";
 import { executeCode, getExecutionTemplateName } from "../utils/executor.js";
+import { compareOutputs } from "../utils/outputComparator.js";
 import { defaultProblems } from "../utils/defaultProblemData.js";
 
 export const SubmissionAPI = exp.Router();
@@ -72,10 +73,10 @@ submissionApp.post("/", verifyToken("user", "admin"), async (req, res, next) => 
         break;
       }
 
-      const cleanActual = result.output.trim();
-      const cleanExpected = test.expectedOutput.trim();
+      const actualOutput = String(result.output ?? "");
+      const expectedOutput = String(test.expectedOutput ?? "");
 
-      if (cleanActual !== cleanExpected) {
+      if (!compareOutputs(actualOutput, expectedOutput)) {
         allPassed = false;
         finalStatus = "wrong answer";
         break;
