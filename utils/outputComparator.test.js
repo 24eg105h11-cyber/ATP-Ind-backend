@@ -10,6 +10,7 @@ const tests = [
   { a: "1.000000", b: "1", expected: true },
   { a: "[1,2,3]", b: "[1,2,4]", expected: false },
   { a: "{a:1}", b: "{\"a\":1}", expected: true },
+  { a: "{a: true}", b: "{\"a\":true}", expected: true },
   { a: "[ 0 , 1 ]\n", b: "[0,1]", expected: true },
   { a: "[0, 1]", b: "[0, 1, 2]", expected: false },
   { a: "{ \"x\": 10 }", b: "{ x: 10 }", expected: true },
