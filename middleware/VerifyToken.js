@@ -5,9 +5,6 @@ export const getJwtSecret = () => {
 };
 
 export const getTokenFromRequest = (req) => {
-  if (req.cookies?.token) {
-    return req.cookies.token;
-  }
   const authHeader = req.headers?.authorization || req.headers?.Authorization;
   if (authHeader) {
     const parts = authHeader.split(" ");
@@ -18,9 +15,15 @@ export const getTokenFromRequest = (req) => {
       return parts[0];
     }
   }
+
+  if (req.cookies?.token) {
+    return req.cookies.token;
+  }
+
   if (req.query?.token) {
     return String(req.query.token);
   }
+
   return null;
 };
 
